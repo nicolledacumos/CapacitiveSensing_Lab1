@@ -1,0 +1,109 @@
+const int touchLeft   = 32; 
+const int touchMid    = 33; 
+const int touchRight  = 27;  
+
+const int ledRed   = 5;
+const int ledGreen    = 18;
+const int ledRight  = 5;
+
+const int touchThreshold = 1300; // i found that my wires needed a lot to read that they were pressed
+const unsigned long swipeTimeout = 600; // i wanted to differentiate between pressing each one and actually doing a swipe motion
+const unsigned long holdDuration = 1000; // don't want to keep the lights on for too long so i can swipe again quickly if i want to
+
+int swipeState = 0;          // 0=idle, 1=first touch, 2=second touch, 3=complete
+int swipeDirection = 0;      // 1 = left-to-right, -1 = right-to-left
+
+bool wasLeft = false, wasMid = false, wasRight = false;
+unsigned long lastStepTime = 0;
+unsigned long completeTime = 0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledLeft, OUTPUT);
+  pinMode(ledMid, OUTPUT);
+  pinMode(ledRight, OUTPUT);
+  digitalWrite(ledLeft, LOW);
+  digitalWrite(ledMid, LOW);
+  digitalWrite(ledRight, LOW);
+}
+
+void resetSwipe() {
+  swipeState = 0;
+  swipeDirection = 0;
+  digitalWrite(ledLeft, LOW);
+  digitalWrite(ledMid, LOW);
+  digitalWrite(ledRight, LOW);
+}
+
+void printDirection() {
+  if (swipeDirection == 1) {
+    Serial.println("Swipe up!");
+  } else if (swipeDirection == -1) {
+    Serial.println("Swipe down!");
+  }
+}
+
+void loop() {
+  int valLeft  = touchRead(touchLeft);
+  int valMid   = touchRead(touchMid);
+  int valRight = touchRead(touchRight);
+
+  bool isLeft  = (valLeft  < touchThreshold);
+  bool isMid   = (valMid   < touchThreshold);
+  bool isRight = (valRight < touchThreshold);
+
+  bool leftTouched  = isLeft  && !wasLeft;
+  bool midTouched   = isMid   && !wasMid;
+  bool rightTouched = isRight && !wasRight;
+
+  wasLeft = isLeft;
+  wasMid = isMid;
+  wasRight = isRight;
+
+  if (swipeState > 0 && swipeState < 3 && (millis() - lastStepTime > swipeTimeout)) {
+    resetSwipe();
+  }
+
+  if (swipeState == 0) {
+    if (leftTouched) {
+      swipeState = 1;
+      swipeDirection = 1;
+      digitalWrite(ledLeft, HIGH);
+      lastStepTime = millis();
+    } else if (rightTouched) {
+      swipeState = 1;
+      swipeDirection = -1;
+      digitalWrite(ledRight, HIGH);
+      lastStepTime = millis();
+    }
+  }
+  else if (swipeState == 1) {
+    if (midTouched) {
+      swipeState = 2;
+      digitalWrite(ledMid, HIGH);
+      lastStepTime = millis();
+    }
+    else if ((swipeDirection == 1 && rightTouched) || (swipeDirection == -1 && leftTouched)) {
+      resetSwipe();
+    }
+  }
+  else if (swipeState == 2) {
+    if (swipeDirection == 1 && rightTouched) {
+      swipeState = 3;
+      digitalWrite(ledRight, HIGH);
+      completeTime = millis();
+      printDirection(); 
+    } else if (swipeDirection == -1 && leftTouched) {
+      swipeState = 3;
+      digitalWrite(ledLeft, HIGH);
+      completeTime = millis();
+      printDirection(); 
+    }
+  }
+
+  if (swipeState == 3 && (millis() - completeTime >= holdDuration)) {
+    resetSwipe();
+  }
+
+  delay(50);
+}
