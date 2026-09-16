@@ -16,7 +16,9 @@ I used this to find the thresholds for each wire in my slider. Because I was hav
 This section focuses on swipe left and swipe right gestures across all three touch sensors. The swipe functions light up 3 different LEDs that correspond the 3 different touch pins. When the serial monitor reads "Swipe Right!" the pins light up left to right on the breadboard. When the serial monitor reads "Swipe Left!" The pins light up right to left on the breadboard.
 
 ## Interactive System
-For my interactive system, I wanted to expand upon the previous section and implement an RGB LED light and a buzzer. For this, I had to rework the wiring. I referred to these YouTube videos [1](https://youtu.be/FROPWgKvWao?si=AV4fAHo3oGSg_DZT) and [2](https://youtu.be/fn9GxfaLK7k?si=yacDeTyyXvwpmVcp) when wiring the LED and buzzer. 
+For my interactive system, I wanted to expand upon the previous section and implement an RGB LED light and a buzzer. For this, I had to rework the wiring. in order to include both elements. I referred to these YouTube videos [1](https://youtu.be/FROPWgKvWao?si=AV4fAHo3oGSg_DZT) and [2](https://youtu.be/fn9GxfaLK7k?si=yacDeTyyXvwpmVcp) when wiring the LED and buzzer. 
+
+When a user presses each sensor attached to the wire, Red, Green, or Blue will light up on the LED. When a user swipes from left to right, the LEd will turn Purple and the buzzer will play a long sound. When a user swipes right to left, the LED will turn orange and the buzzer will play 3 beeps.
 
 **View the video with all the elements [here](https://youtube.com/shorts/9tIGrntlfLY?si=1s4EUQfOyRGskL19).**
 
