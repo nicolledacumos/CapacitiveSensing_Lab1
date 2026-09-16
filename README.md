@@ -18,8 +18,9 @@ This section focuses on swipe left and swipe right gestures across all three tou
 ## Interactive System
 For my interactive system, I wanted to expand upon the previous section and implement an RGB LED light and a buzzer. For this, I had to rework the wiring. I referred to these YouTube videos [1](https://youtu.be/FROPWgKvWao?si=AV4fAHo3oGSg_DZT) and [2](https://youtu.be/fn9GxfaLK7k?si=yacDeTyyXvwpmVcp) when wiring the LED and buzzer. 
 
-View the video with all the elements [here](https://youtube.com/shorts/9tIGrntlfLY?si=1s4EUQfOyRGskL19).
+**View the video with all the elements [here](https://youtube.com/shorts/9tIGrntlfLY?si=1s4EUQfOyRGskL19).**
 
+### Notes
 I used AI to help get started and bridge any gaps when I got stuck with where to take my code. I also used the C++ resource link to help understand each function better.
 
 
