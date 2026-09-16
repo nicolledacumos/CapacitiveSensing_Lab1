@@ -1,0 +1,32 @@
+const int LED_PIN = 27;
+const int TOUCH_PIN = 32;
+
+#define TOUCH_ACTIVATED_VALUE 1630 // We originally had this lower than 1000 in class, but I found that the serial monitor read values around 1620.
+#define TOUCH_MIN_VALUE 1300 // this is what the serial monitor read when I put two fingers around the wire. With just my fingertip, I would adjust this to about 1520.
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT); // led is the output
+  Serial.begin(115200);
+}
+
+void loop() {
+  int sensedValue = touchRead(TOUCH_PIN); // defines the sensedValue as what is read from the touch pin
+  Serial.print("0,2000,"); //the limits
+  Serial.println(sensedValue); // will show what the sensed value is
+
+  if (sensedValue <= TOUCH_ACTIVATED_VALUE) { // if the value is less than or equal to the defined touch_activated_value
+    int brightness = map( // converts values into what is necessary for the LED
+      sensedValue, // first value being converted
+      TOUCH_ACTIVATED_VALUE, // max value
+      TOUCH_MIN_VALUE, // min value
+      0, // when the serial monitor reads 1620-ish, it is a low LED light
+      255 // when the serial monitor shows a value near the touch_min_value, there is a high LED light
+    );
+    brightness = constrain(brightness, 0, 255); // keeps value in range of 0 - 255 for LED
+
+    analogWrite(LED_PIN, brightness); 
+  } else {
+    analogWrite(LED_PIN, 0);
+    delay(10);
+  }
+}
