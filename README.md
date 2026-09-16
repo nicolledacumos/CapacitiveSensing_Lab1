@@ -20,5 +20,7 @@ For my interactive system, I wanted to expand upon the previous section and impl
 
 View the video with all the elements [here](https://youtube.com/shorts/9tIGrntlfLY?si=1s4EUQfOyRGskL19).
 
+I used AI to help get started and bridge any gaps when I got stuck with where to take my code. I also used the C++ resource link to help understand each function better.
+
 
 
