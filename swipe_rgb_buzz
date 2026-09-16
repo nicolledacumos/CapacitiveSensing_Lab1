@@ -1,0 +1,175 @@
+# I used Claude to help get started on this. Then as I continued to add more elements, I double checked with Claude to see if I was coding it right. I used YouTube videos to learn how to wire the LED and the buzzer to the ESP32, and the visual ESP32 pin guide to know where to put everything. There are a lot of comments from me to help me better understand C++ and the logic behind each function.
+
+const int touchLeft   = 32; // Touch pins
+const int touchMid    = 33; 
+const int touchRight  = 27;  
+
+const int ledRed   = 5; // LED pins
+const int ledGreen = 14;
+const int ledBlue  = 18;
+
+const int buzzerPin = 19; // buzzer pin
+
+const int touchThreshold = 1200; // based on callibrations, may change the day of
+const unsigned long swipeTimeout = 600; // if it does not detect a swipe, the system resets.
+const unsigned long holdDuration = 2000; // wanted the system to stay on this long 
+
+const unsigned long beepOnDuration  = 150; // each beep that is not related to the LED is this duration
+const unsigned long beepOffDuration = 150; 
+const int beepTotalCount = 3; // i wanted the swipe left function to beep 3 times
+
+int swipeState = 0;
+int swipeDirection = 0;
+
+bool wasLeft = false, wasMid = false, wasRight = false;
+unsigned long lastStepTime = 0;
+unsigned long completeTime = 0;
+
+enum BuzzerMode { BUZZER_OFF, BUZZER_CONTINUOUS, BUZZER_BEEPING };
+BuzzerMode buzzerMode = BUZZER_OFF;
+int beepsDone = 0;
+bool beepOn = false;
+unsigned long beepPhaseStart = 0;
+
+void setColor(int r, int g, int b) {
+  analogWrite(ledRed, r);
+  analogWrite(ledGreen, g);
+  analogWrite(ledBlue, b);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledRed, OUTPUT);
+  pinMode(ledGreen, OUTPUT);
+  pinMode(ledBlue, OUTPUT);
+  setColor(0, 0, 0); // led has no color at the start
+
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, LOW); // buzzer is not making any noise at setup
+}
+
+void stopBuzzer() {
+  buzzerMode = BUZZER_OFF;
+  digitalWrite(buzzerPin, LOW); 
+}
+
+void resetSwipe() {
+  swipeState = 0;
+  swipeDirection = 0;
+  setColor(0, 0, 0);
+  stopBuzzer();
+}
+
+void printDirection() {
+  if (swipeDirection == 1) {
+    Serial.println("Swipe right!");
+    setColor(128, 0, 128); // turns led purple
+    buzzerMode = BUZZER_CONTINUOUS;
+    digitalWrite(buzzerPin, HIGH);
+  } else if (swipeDirection == -1) {
+    Serial.println("Swipe left!");
+    setColor(255, 15, 0); // turns led green
+    buzzerMode = BUZZER_BEEPING;
+    beepsDone = 0;
+    beepOn = true;
+    beepPhaseStart = millis();
+    digitalWrite(buzzerPin, HIGH); 
+  }
+}
+
+void updateBuzzer() {
+  if (buzzerMode == BUZZER_CONTINUOUS) {
+    digitalWrite(buzzerPin, HIGH); // turns buzzer on when it is at BUZZER_CONTINUOUS 
+    return;
+  }
+
+  if (buzzerMode == BUZZER_BEEPING) {
+    unsigned long elapsed = millis() - beepPhaseStart;
+
+    if (beepOn && elapsed >= beepOnDuration) {
+      digitalWrite(buzzerPin, LOW);
+      beepOn = false;
+      beepPhaseStart = millis();
+      beepsDone++;
+      if (beepsDone >= beepTotalCount) {
+        buzzerMode = BUZZER_OFF; // turns buzzer off after 3 beeps
+      }
+    }
+    else if (!beepOn && elapsed >= beepOffDuration) {
+      digitalWrite(buzzerPin, HIGH);
+      beepOn = true;
+      beepPhaseStart = millis();
+    }
+  }
+}
+
+void loop() {
+  int valLeft  = touchRead(touchLeft); // defines these as number values
+  int valMid   = touchRead(touchMid);
+  int valRight = touchRead(touchRight);
+
+  bool isLeft  = (valLeft  < touchThreshold); // defining boolean variables
+  bool isMid   = (valMid   < touchThreshold);
+  bool isRight = (valRight < touchThreshold);
+
+  Serial.println("L:" + String(valLeft) + " M:" + String(valMid) + " R:" + String(valRight));
+  // Serial.println("swipeState:" + String(swipeState) + " isLeft:" + String(isLeft) + " isMid:" + String(isMid) + " isRight:" + String(isRight));
+
+  bool leftTouched  = isLeft  && !wasLeft; // defining variables, x touched = is touched && was not touched before
+  bool midTouched   = isMid   && !wasMid; 
+  bool rightTouched = isRight && !wasRight;
+
+  wasLeft = isLeft; 
+  wasMid = isMid;
+  wasRight = isRight;
+
+  if (swipeState > 0 && swipeState < 3 && (millis() - lastStepTime > swipeTimeout)) { 
+    resetSwipe();
+  }
+
+  if (swipeState == 0) {
+    if (leftTouched) {
+      swipeState = 1; 
+      swipeDirection = 1; // starting at left
+      setColor(255, 0, 0); 
+      lastStepTime = millis(); 
+    } else if (rightTouched) {
+      swipeState = 1; 
+      swipeDirection = -1; // starting at right
+      setColor(0, 0, 255); 
+      lastStepTime = millis();
+    } else if (midTouched) { // defines color for middle sensor
+      swipeState = 1;
+      setColor(0, 255, 0);
+      lastStepTime = millis();
+    }
+  }
+  else if (swipeState == 1) {
+    if (midTouched) {
+      swipeState = 2;
+      lastStepTime = millis();
+    }
+    else if ((swipeDirection == 1 && rightTouched) || (swipeDirection == -1 && leftTouched)) {
+      resetSwipe(); // resets the swipe 
+    }
+  }
+  else if (swipeState == 2) { // completes the swipe, the swipe state is now 2
+    if (swipeDirection == 1 && rightTouched) { // if the swipe direction is 1 (starting from left) and the right is rouched
+      swipeState = 3; // the swipe state is 3
+      completeTime = millis();
+      printDirection(); // triggers the functions from above ^
+    } else if (swipeDirection == -1 && leftTouched) {
+      swipeState = 3;
+      completeTime = millis();
+      printDirection();
+    }
+  }
+
+  if (swipeState == 3 && (millis() - completeTime >= holdDuration)) {
+    resetSwipe(); // resets the swipe after time
+  }
+
+  updateBuzzer();
+
+  delay(2);
+}
