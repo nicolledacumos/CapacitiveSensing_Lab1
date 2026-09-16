@@ -27,7 +27,4 @@ void loop() {
   wasTouched = isTouched; 
   delay(20);
 
-
-  // put your main code here, to run repeatedly:
-
 }
