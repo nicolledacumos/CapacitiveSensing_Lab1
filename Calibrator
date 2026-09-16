@@ -1,0 +1,16 @@
+const int TOUCH_PIN = 27;
+
+bool ledState = false; // sets initial boolean variable to false
+bool wasTouched = false;
+
+void setup() {
+  Serial.begin(112500);
+  delay(500);
+
+  pinMode(TOUCH_PIN, INPUT); // Touch is the input
+}
+
+void loop() {
+  int touch_value = touchRead(TOUCH_PIN); // reads captive touch value
+  Serial.println(touch_value); // will show value in seriial monitor
+}
