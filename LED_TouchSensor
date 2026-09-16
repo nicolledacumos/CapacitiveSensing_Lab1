@@ -1,0 +1,33 @@
+const int LED_PIN = 18; // const = does not change
+const int TOUCH_PIN = 33;
+
+bool ledState = false; // sets initial boolean variable to false
+bool wasTouched = false;
+
+void setup() {
+  Serial.begin(112500);
+  delay(500);
+
+  pinMode(LED_PIN, OUTPUT); // LED light is the output, dependent on touch
+  pinMode(TOUCH_PIN, INPUT); // Touch is the input
+  digitalWrite(LED_PIN, LOW); // LED is LOW (off) during setup
+}
+
+void loop() {
+  int touch_value = touchRead(TOUCH_PIN); // reads captive touch value
+  Serial.println(touch_value); // will show value in seriial monitor
+
+  bool isTouched = (touch_value < 1400); // creates variable that shows what the touch_value should read when the sensor detects touch
+  
+  if (isTouched && !wasTouched) { // if the conductor is or is not being touched and was or was not touched before (! changes it to opposite)
+    ledState = !ledState; // change the ledState to the opposite
+    digitalWrite(LED_PIN, ledState ? HIGH : LOW); // if the value is true, change to HIGH, if false, change to LOW
+    delay(200); // short delay
+  }
+  wasTouched = isTouched; 
+  delay(20);
+
+
+  // put your main code here, to run repeatedly:
+
+}
